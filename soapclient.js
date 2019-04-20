@@ -1,12 +1,3 @@
-/*****************************************************************************\
-
- Javascript "SOAP Client" library
- 
- @version: 2.4 - 2007.12.21
- @author: Matteo Casati - http://www.guru4.net/
- 
-\*****************************************************************************/
-
 function SOAPClientParameters()
 {
 	var _pl = new Array();
@@ -233,10 +224,10 @@ SOAPClient._node2object = function (xml, wsdlTypes) {
 	if (xml.nodeType == 1) { // element
 		// do attributes
 		if (xml.attributes.length > 0) {
-			obj["@attributes"] = {};
+			obj["attributes"] = {};
 			for (var j = 0; j < xml.attributes.length; j++) {
 				var attribute = xml.attributes.item(j);
-				obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+				obj["attributes"][attribute.nodeName] = attribute.nodeValue;
 			}
 		}
 	} else if (xml.nodeType == 3) { // text
