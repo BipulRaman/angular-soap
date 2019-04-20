@@ -226,41 +226,45 @@ SOAPClient._soapresult2object = function(node, wsdl)
     var wsdlTypes = SOAPClient._getTypesFromWsdl(wsdl);
     return SOAPClient._node2object(node, wsdlTypes);
 }
-SOAPClient._node2object = function(node, wsdlTypes)
-{
-	// null node
-	if(node == null)
-		return null;
-	// text node
-	if(node.nodeType == 3 || node.nodeType == 4)
-		return SOAPClient._extractValue(node, wsdlTypes);
-	// leaf node
-	if (node.childNodes.length == 1 && (node.childNodes[0].nodeType == 3 || node.childNodes[0].nodeType == 4))
-		return SOAPClient._node2object(node.childNodes[0], wsdlTypes);
-	var isarray = SOAPClient._getTypeFromWsdl(node.nodeName, wsdlTypes).toLowerCase().indexOf("arrayof") != -1;
-	// object node
-	if(!isarray)
-	{
-		var obj = null;
-		if(node.hasChildNodes())
-			obj = new Object();
-		for(var i = 0; i < node.childNodes.length; i++)
-		{
-			var p = SOAPClient._node2object(node.childNodes[i], wsdlTypes);
-			obj[node.childNodes[i].nodeName] = p;
+SOAPClient._node2object = function (xml, wsdlTypes) {
+	// Create the return object
+	var obj = {};
+
+	if (xml.nodeType == 1) { // element
+		// do attributes
+		if (xml.attributes.length > 0) {
+			obj["@attributes"] = {};
+			for (var j = 0; j < xml.attributes.length; j++) {
+				var attribute = xml.attributes.item(j);
+				obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+			}
 		}
-		return obj;
+	} else if (xml.nodeType == 3) { // text
+		obj = xml.nodeValue;
 	}
-	// list node
-	else
-	{
-		// create node ref
-		var l = new Array();
-		for(var i = 0; i < node.childNodes.length; i++)
-			l[l.length] = SOAPClient._node2object(node.childNodes[i], wsdlTypes);
-		return l;
+
+	// do children
+	// If just one text node inside
+	if (xml.hasChildNodes() && xml.childNodes.length === 1 && xml.childNodes[0].nodeType === 3) {
+		obj = xml.childNodes[0].nodeValue;
 	}
-	return null;
+	else if (xml.hasChildNodes()) {
+		for (var i = 0; i < xml.childNodes.length; i++) {
+			var item = xml.childNodes.item(i);
+			var nodeName = item.nodeName;
+			if (typeof (obj[nodeName]) == "undefined") {
+				obj[nodeName] = SOAPClient._node2object(item);
+			} else {
+				if (typeof (obj[nodeName].push) == "undefined") {
+					var old = obj[nodeName];
+					obj[nodeName] = [];
+					obj[nodeName].push(old);
+				}
+				obj[nodeName].push(SOAPClient._node2object(item));
+			}
+		}
+	}
+	return obj;
 }
 SOAPClient._extractValue = function(node, wsdlTypes)
 {
